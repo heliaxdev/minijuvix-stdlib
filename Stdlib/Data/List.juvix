@@ -15,6 +15,7 @@ import Stdlib.Trait.Foldable open using {
   module Polymorphic;
   fromPolymorphicFoldable;
 };
+import Stdlib.Trait.Traversable open;
 
 --- 𝒪(1). Partial function that returns the first element of a ;List;.
 phead {A} {{Partial}} : List A -> A
@@ -103,4 +104,15 @@ instance
 monadListI : Monad List :=
   mkMonad@{
     bind := flip concatMap;
+  };
+
+instance
+traversableListI : Traversable List :=
+  mkTraversable@{
+    terminating
+    sequenceA {F : Type -> Type} {{_ : Applicative F}} {A} (xs : List (F A)) : F (List A) :=
+      case xs of
+        | nil := pure nil
+        | (x :: xs) := liftA2 (::) x (sequenceA xs);
+    traverse := defaultTraverse sequenceA;
   };
